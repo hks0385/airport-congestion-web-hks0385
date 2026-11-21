@@ -101,6 +101,16 @@ function formatSelectedDate(date: string): string {
   return `${year}.${month}.${day}`
 }
 
+type Theme = 'light' | 'dark'
+
+function getInitialTheme(): Theme {
+  const savedTheme = window.localStorage.getItem('airport-theme')
+  if (savedTheme === 'light' || savedTheme === 'dark') {
+    return savedTheme
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 async function fetchCongestionData(
   selectdate: '0' | '1' = '0',
   signal?: AbortSignal,
@@ -145,14 +155,35 @@ function App() {
   const currentTime = formatTimeInput(now)
   const activeRequest = useRef<AbortController | null>(null)
 
-  const [selectedDate, setSelectedDate] = useState(today)
-  const [selectedTime, setSelectedTime] = useState(currentTime)
+  const savedDate = window.localStorage.getItem('airport-selected-date')
+  const savedTime = window.localStorage.getItem('airport-selected-time')
+  const initialDate =
+    savedDate === today || savedDate === tomorrowDate ? savedDate : today
+  const initialTime = savedTime && /^\d{2}:00$/.test(savedTime) ? savedTime : currentTime
+
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+  const [selectedDate, setSelectedDate] = useState(initialDate)
+  const [selectedTime, setSelectedTime] = useState(initialTime)
   const [items, setItems] = useState<PassengerForecastItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
   const [selectionDescription, setSelectionDescription] = useState(
-    `${formatSelectedDate(today)} ${currentTime}`,
+    `${formatSelectedDate(initialDate)} ${initialTime}`,
   )
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    document.documentElement.style.colorScheme = theme
+    window.localStorage.setItem('airport-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    window.localStorage.setItem('airport-selected-date', selectedDate)
+  }, [selectedDate])
+
+  useEffect(() => {
+    window.localStorage.setItem('airport-selected-time', selectedTime)
+  }, [selectedTime])
 
   const loadSelectedTime = async (date: string, time: string) => {
     activeRequest.current?.abort()
@@ -199,9 +230,9 @@ function App() {
   }
 
   useEffect(() => {
-    void loadSelectedTime(today, currentTime)
+    void loadSelectedTime(initialDate, initialTime)
     return () => activeRequest.current?.abort()
-    // Initial load only: the date/time state initializes from the local current time.
+    // Initial load only: the date/time state initializes from localStorage or the current time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -216,6 +247,16 @@ function App() {
 
   return (
     <main className="forecast-page">
+      <button
+        type="button"
+        className="theme-toggle"
+        aria-label={theme === 'light' ? '다크 모드로 전환' : '라이트 모드로 전환'}
+        title={theme === 'light' ? '다크 모드' : '라이트 모드'}
+        onClick={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
+      >
+        <span aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span>
+        <span>{theme === 'light' ? '다크 모드' : '라이트 모드'}</span>
+      </button>
       <header className="forecast-header">
         <p className="eyebrow">INCHEON AIRPORT · PASSENGER FORECAST</p>
         <h1>공항 혼잡도 예고</h1>

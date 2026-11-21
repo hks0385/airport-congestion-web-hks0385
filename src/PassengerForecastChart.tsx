@@ -19,44 +19,44 @@ const chartGroups = [
   {
     title: '제1여객터미널 · 입국',
     series: [
-      { key: 't1eg1', name: '입국장 동편 (A·B)', color: '#344054' },
-      { key: 't1eg2', name: '입국장 서편 (E·F)', color: '#667085' },
-      { key: 't1eg3', name: '입국심사 (C)', color: '#98a2b3' },
-      { key: 't1eg4', name: '입국심사 (D)', color: '#475467' },
+      { key: 't1eg1', name: '입국장 동편 (A·B)', color: 'var(--chart-1)' },
+      { key: 't1eg2', name: '입국장 서편 (E·F)', color: 'var(--chart-2)' },
+      { key: 't1eg3', name: '입국심사 (C)', color: 'var(--chart-3)' },
+      { key: 't1eg4', name: '입국심사 (D)', color: 'var(--chart-4)' },
     ],
   },
   {
     title: '제1여객터미널 · 출국',
     series: [
-      { key: 't1dg1', name: '출국장 1', color: '#344054' },
-      { key: 't1dg2', name: '출국장 2', color: '#667085' },
-      { key: 't1dg3', name: '출국장 3', color: '#98a2b3' },
-      { key: 't1dg4', name: '출국장 4', color: '#475467' },
-      { key: 't1dg5', name: '출국장 5', color: '#1d2939' },
-      { key: 't1dg6', name: '출국장 6', color: '#aeb5bf' },
+      { key: 't1dg1', name: '출국장 1', color: 'var(--chart-1)' },
+      { key: 't1dg2', name: '출국장 2', color: 'var(--chart-2)' },
+      { key: 't1dg3', name: '출국장 3', color: 'var(--chart-3)' },
+      { key: 't1dg4', name: '출국장 4', color: 'var(--chart-4)' },
+      { key: 't1dg5', name: '출국장 5', color: 'var(--chart-5)' },
+      { key: 't1dg6', name: '출국장 6', color: 'var(--chart-6)' },
     ],
   },
   {
     title: '제2여객터미널 · 입국',
     series: [
-      { key: 't2eg1', name: '입국장 1', color: '#344054' },
-      { key: 't2eg2', name: '입국장 2', color: '#98a2b3' },
+      { key: 't2eg1', name: '입국장 1', color: 'var(--chart-1)' },
+      { key: 't2eg2', name: '입국장 2', color: 'var(--chart-3)' },
     ],
   },
   {
     title: '제2여객터미널 · 출국',
     series: [
-      { key: 't2dg1', name: '출국장 1', color: '#475467' },
-      { key: 't2dg2', name: '출국장 2', color: '#667085' },
+      { key: 't2dg1', name: '출국장 1', color: 'var(--chart-4)' },
+      { key: 't2dg2', name: '출국장 2', color: 'var(--chart-2)' },
     ],
   },
 ] as const
 
 const totalSeries = [
-  { key: 't1egsum1', name: 'T1 입국 합계', color: '#344054' },
-  { key: 't1dgsum1', name: 'T1 출국 합계', color: '#667085' },
-  { key: 't2egsum1', name: 'T2 입국 합계', color: '#98a2b3' },
-  { key: 't2dgsum2', name: 'T2 출국 합계', color: '#475467' },
+  { key: 't1egsum1', name: 'T1 입국 합계', color: 'var(--chart-1)' },
+  { key: 't1dgsum1', name: 'T1 출국 합계', color: 'var(--chart-2)' },
+  { key: 't2egsum1', name: 'T2 입국 합계', color: 'var(--chart-3)' },
+  { key: 't2dgsum2', name: 'T2 출국 합계', color: 'var(--chart-4)' },
 ] as const
 
 function PassengerForecastChart({ items }: PassengerForecastChartProps) {
