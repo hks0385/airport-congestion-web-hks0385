@@ -213,6 +213,7 @@
 
 .forecast-description {
   color: var(--text);
+  font-size: clamp(15px, 2.2vw, 18px);
 }
 
 .departure-selector {
@@ -273,8 +274,8 @@
 }
 
 .primary-button {
-  border: 1px solid var(--accent);
-  background: var(--accent);
+  border: 1px solid #344054;
+  background: #344054;
   color: #fff;
 }
 
@@ -541,14 +542,16 @@
   margin-top: 12px;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .forecast-page {
-    padding: 32px 16px 48px;
+    padding: clamp(24px, 6vw, 32px) clamp(12px, 4vw, 16px) 48px;
   }
 
   .departure-selector {
     align-items: stretch;
     flex-direction: column;
+    gap: 14px;
+    padding: 16px;
   }
 
   .departure-fields {
@@ -559,10 +562,17 @@
   .departure-fields input {
     min-width: 0;
     width: 100%;
+    min-height: 48px;
+    font-size: 16px;
   }
 
   .departure-actions {
     flex-direction: column;
+  }
+
+  .departure-actions button {
+    width: 100%;
+    min-height: 48px;
   }
 
   .terminal-grid {
@@ -610,6 +620,10 @@
 }
 
 @media (max-width: 520px) {
+  .departure-fields {
+    grid-template-columns: 1fr;
+  }
+
   .forecast-card {
     flex-basis: 100%;
     max-width: 100%;
