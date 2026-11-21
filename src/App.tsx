@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import PassengerForecastChart from './PassengerForecastChart'
 
@@ -85,6 +85,22 @@ function formatPassengerCount(value: string | number | undefined): string {
     : String(value)
 }
 
+function formatDateInput(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatTimeInput(date: Date): string {
+  return `${String(date.getHours()).padStart(2, '0')}:00`
+}
+
+function formatSelectedDate(date: string): string {
+  const [year, month, day] = date.split('-')
+  return `${year}.${month}.${day}`
+}
+
 async function fetchCongestionData(
   selectdate: '0' | '1' = '0',
   signal?: AbortSignal,
@@ -121,17 +137,53 @@ async function fetchCongestionData(
 }
 
 function App() {
+  const now = new Date()
+  const today = formatDateInput(now)
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowDate = formatDateInput(tomorrow)
+  const currentTime = formatTimeInput(now)
+  const activeRequest = useRef<AbortController | null>(null)
+
+  const [selectedDate, setSelectedDate] = useState(today)
+  const [selectedTime, setSelectedTime] = useState(currentTime)
   const [items, setItems] = useState<PassengerForecastItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+  const [selectionDescription, setSelectionDescription] = useState(
+    `${formatSelectedDate(today)} ${currentTime}`,
+  )
 
-  useEffect(() => {
+  const loadSelectedTime = async (date: string, time: string) => {
+    activeRequest.current?.abort()
     const controller = new AbortController()
+    activeRequest.current = controller
+    setIsLoading(true)
+    setErrorMessage('')
 
-    void fetchCongestionData('0', controller.signal)
+    const selectdate =
+      date === today ? '0' : date === tomorrowDate ? '1' : null
+    if (!selectdate) {
+      setItems([])
+      setErrorMessage('오늘 또는 내일의 날짜를 선택해 주세요.')
+      setIsLoading(false)
+      return
+    }
+
+    void fetchCongestionData(selectdate, controller.signal)
       .then((data) => {
-        setItems(data.response.body.items)
-        console.log('인천공항 승객 예고 데이터:', data.response.body.items)
+        const compactDate = date.replaceAll('-', '')
+        const hour = time.slice(0, 2)
+        const matchingItems = data.response.body.items.filter((item) => {
+          const itemDate = String(item.adate ?? '')
+          const itemTime = String(item.atime ?? '')
+          const itemHour = itemTime.split('_')[0]?.padStart(2, '0')
+          return itemDate === compactDate && itemHour === hour
+        })
+
+        setItems(matchingItems)
+        setSelectionDescription(`${formatSelectedDate(date)} ${time}`)
+        console.log('선택한 시간대 혼잡도 데이터:', matchingItems)
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
@@ -144,9 +196,23 @@ function App() {
           setIsLoading(false)
         }
       })
+  }
 
-    return () => controller.abort()
+  useEffect(() => {
+    void loadSelectedTime(today, currentTime)
+    return () => activeRequest.current?.abort()
+    // Initial load only: the date/time state initializes from the local current time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleCurrentTime = () => {
+    const current = new Date()
+    const date = formatDateInput(current)
+    const time = formatTimeInput(current)
+    setSelectedDate(date)
+    setSelectedTime(time)
+    void loadSelectedTime(date, time)
+  }
 
   return (
     <main className="forecast-page">
@@ -158,8 +224,50 @@ function App() {
         </p>
       </header>
 
+      <section className="departure-selector" aria-label="출발 시간 선택">
+        <div className="departure-fields">
+          <label>
+            <span>출발 날짜</span>
+            <input
+              type="date"
+              value={selectedDate}
+              min={today}
+              max={tomorrowDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>출발 시간</span>
+            <input
+              type="time"
+              value={selectedTime}
+              step="3600"
+              onChange={(event) => setSelectedTime(event.target.value)}
+            />
+          </label>
+        </div>
+        <div className="departure-actions">
+          <button
+            type="button"
+            className="primary-button"
+            disabled={isLoading || !selectedDate || !selectedTime}
+            onClick={() => void loadSelectedTime(selectedDate, selectedTime)}
+          >
+            이 시간대 혼잡도 보기
+          </button>
+          <button type="button" className="secondary-button" onClick={handleCurrentTime}>
+            현재 시간으로 돌아가기
+          </button>
+        </div>
+      </section>
+
       {isLoading && <p className="request-state">혼잡도 데이터를 불러오는 중입니다...</p>}
       {errorMessage && <p className="request-state error-state" role="alert">{errorMessage}</p>}
+      {!isLoading && !errorMessage && items.length > 0 && (
+        <p className="selection-result">
+          <strong>{selectionDescription}</strong> 출발 시간대 예상 혼잡도
+        </p>
+      )}
       {!isLoading && !errorMessage && items.length === 0 && (
         <p className="request-state">표시할 예측 데이터가 없습니다.</p>
       )}
